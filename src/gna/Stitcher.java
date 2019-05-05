@@ -13,11 +13,29 @@ import libpract.*;
  */
 public class Stitcher
 {
-	
+	/**
+	 * Variable storing the positions used by Dijkstra to find the shortest path.
+	 */
 	private PriorityQueue<Position> positionPQ;
+	
+	/**
+	 * Variable storing the width of the image.
+	 */
 	private int width;
+	
+	/**
+	 * Variable storing the height of the image.
+	 */
 	private int height;
+	
+	/**
+	 * Variable storing the currently shortest distances to the vertices (used by Dijkstra).
+	 */
 	private double[][] distTo;
+	
+	/**
+	 * Variable storing the 2D array of positions. For every already calculated vertex there is a previous vertex to reach the one on the position. 
+	 */
 	private Position[][] previousVertex;
 	
 	/**
@@ -49,8 +67,6 @@ public class Stitcher
 	 *      
 	 */
 	public List<Position> seam(int[][] image1, int[][] image2) {
-		//this.setWidth(image1.length);
-		//this.setHeight(image1[0].length);
 		this.setHeight(image1.length);
 		this.setWidth(image1[0].length);
 		
@@ -63,6 +79,11 @@ public class Stitcher
 		return this.getShortestPathSolution();
 	}
 	
+	/**
+	 * Performs the Dijkstra algorithm to calculate the shortest path from the upper left corner to the bottom right corner.
+	 * @param image1 The values of image 1.
+	 * @param image2 The values of image 2.
+	 */
 	private void performDijkstra(int[][] image1, int[][] image2) {
 		// all nodes except the start node are initialised to zero.
 		for (int h = 0; h < this.getHeight(); h++) {
@@ -93,6 +114,10 @@ public class Stitcher
 		}
 	}
 	
+	/**
+	 * Calculates the shortest path out of the previousVertex 2D array.
+	 * @return The shortest path from top left to bottom right.
+	 */
 	private List<Position> getShortestPathSolution(){
 		if(!hasPathTo(this.getTargetPosition())) return null;
 		//calculate shortest path starting from the target
@@ -130,7 +155,14 @@ public class Stitcher
 		this.floodFill(mask, 0, mask[0].length-1, Stitch.IMAGE2);
 	}
 
-	public void floodFill(Stitch[][] mask, int y, int x, Stitch type) {
+	/**
+	 * Fills the mask with the given type on the given coordinates. It does not cross the seam.
+	 * @param mask The mask with a given seam.
+	 * @param y    The starting y-position.
+	 * @param x    The starting x-position.
+	 * @param type The Stich type to which it will be set.
+	 */
+	private void floodFill(Stitch[][] mask, int y, int x, Stitch type) {
 		//use of stack because we need to go depth first
 		Stack<Position> nextColoring = new Stack<>();
 		nextColoring.add(new Position(y, x));
@@ -159,11 +191,27 @@ public class Stitcher
 	 * image1 and image2 are both non-null and have equal dimensions.
 	 */
 	public Stitch[][] stitch(int[][] image1, int[][] image2) {
-		// use seam and floodfill to implement this method
-		throw new RuntimeException("not implemented yet");
+		Stitch[][] mask = new Stitch[image1.length][image1[0].length];
+		for (int i = 0; i < mask.length; i++) {
+			for (int j = 0; j < mask[0].length; j++) {
+				mask[i][j] = Stitch.EMPTY;
+			}
+		}
+		for (Position position : this.seam(image1, image2)) {
+			mask[position.getY()][position.getX()] = Stitch.SEAM;
+		}
+		this.floodfill(mask);		
+		return mask;
 	}
 
-	
+	/**
+	 * Sets the priorityQue of positions.
+	 * @param positionPQ The position to which it will be set.
+	 * @throws IllegalArgumentException when the positionPQ parameter equals null
+	 *                                  | positionPQ == null
+	 * @post The positionPQ is set to the given parameter
+	 *       | new.getPositionPQ() == positionPQ
+	 */
 	private void setPositionPQ(PriorityQueue<Position> positionPQ) {
 		if(positionPQ == null) {
 			throw new IllegalArgumentException("The positionPQ cannot be null.");
@@ -171,36 +219,76 @@ public class Stitcher
 		this.positionPQ = positionPQ;
 	}
 	
+	/**
+	 * Returns the priorityQueue of positions.
+	 * @return The priorityyQueue of positions.
+	 */
 	public PriorityQueue<Position> getPositionPQ() {
 		return positionPQ;
 	}
 
+	/**
+	 * Returns the width of the image (2D array).
+	 * @return The width of the image (2D array).
+	 */
 	public int getWidth() {
 		return width;
 	}
 
-	public void setWidth(int width) {
+	/**
+	 * Sets the width of the image.
+	 * @param width The width of the image.
+	 * @throws IllegalArgumentException when the width equals a negative value
+	 *                                 | width < 0
+	 * @post the width equals the given parameter.
+	 *      | new.getWidth() == width
+	 */
+	private void setWidth(int width) {
 		if(width < 0) {
 			throw new IllegalArgumentException("Width of an image cannot be negative.");
 		}
 		this.width = width;
 	}
 
+	/**
+	 * Returns the height of the image (2D array).
+	 * @return The height of the image (2D array).
+	 */
 	public int getHeight() {
 		return height;
 	}
 
-	public void setHeight(int height) {
+	/**
+	 * Sets the height of the image.
+	 * @param height The height of the image.
+	 * @throws IllegalArgumentException when the height equals a negative value
+	 *                                 | width < 0
+	 * @post the height equals the given parameter.
+	 *      | new.getHeight() == height
+	 */
+	private void setHeight(int height) {
 		if(height < 0) {
 			throw new IllegalArgumentException("The height of an image cannot be negative.");
 		}
 		this.height = height;
 	}
 
+	/**
+	 * Returns the Distance to (a certain vertex on the location) 2D matrix.
+	 * @return the Distance to (a certain vertex on the location) 2D matrix.
+	 */
 	public double[][] getDistTo() {
 		return distTo;
 	}
 
+	/**
+	 * Sets the distanceTo array.
+	 * @param distTo the 2D array of double to which the array will be set.
+	 * @throws IllegalArgumentException when the distTo equals null
+	 *                                  |distTo == null
+	 * @post the distTo array equals the given parameter
+	 *       | new.getDistTo() == distTo
+	 */
 	private void setDistTo(double[][] distTo) {
 		if(distTo == null) {
 			throw new IllegalArgumentException("Disto cannot be set to null.");
@@ -208,10 +296,22 @@ public class Stitcher
 		this.distTo = distTo;
 	}
 
+	/**
+	 * Returns the previous vertex 2D array of positions.
+	 * @return the previous vertex 2D array of positions.
+	 */
 	public Position[][] getPreviousVertex() {
 		return previousVertex;
 	}
 
+	/**
+	 * Sets the previousVertex 2D array.
+	 * @param previousVertex The previousVertex to which it will be set.
+	 * @throws IllegalArgumentException when the previousVertex equals null
+	 *                                  | previousVertex == null
+	 * @post The previousVertex variable is set to the given parameter.
+	 *       | new.getPreviousVertex() == previousVertex
+	 */
 	private void setPreviousVertex(Position[][] previousVertex) {
 		if(previousVertex == null) {
 			throw new IllegalArgumentException("EdgeTo cannot be set to null.");
@@ -219,6 +319,16 @@ public class Stitcher
 		this.previousVertex = previousVertex;
 	}
 	
+	/**
+	 * Sets the distance to value of 1 particular element in the 2D array.
+	 * @param y The y-coordinate.
+	 * @param x The x-coordinate.
+	 * @param value The value to which it will be set.
+	 * @throws IllegalArgumentException when at least one of the coordinates is negative.
+	 *                                  | x <0 || y <0
+	 * @post The distance is set to the given value.
+	 *       | new.getDistance()[y][x] == value
+	 */
 	private void setDistoValue(int y, int x, double value) {
 		if(x <0 || y <0) {
 			throw new IllegalArgumentException("The positions of disto array cannot be null.");
@@ -226,6 +336,16 @@ public class Stitcher
 		distTo[y][x] = value;
 	}
 	
+	/**
+	 * Sets the previousVertexValue to the given value.
+	 * @param y The y-coordinate.
+	 * @param x The x-coordinate.
+	 * @param previousPosition The value to of the previous position to which it will be set.
+	 * @throws IllegalArgumentException when at least one of the coordinates is below zero or the previousPosition equals null.
+	 *                                  | (x <0) || (y<0) || (previousPosition== null)
+	 * @post The previousPosition is set on the given coordinates.
+	 *        | new.getPreviousVertex()[y][x] == previousPosition
+	 */
 	private void setPreviousVertexValue(int y, int x, Position previousPosition) {
 		if((x <0) || (y<0) || (previousPosition== null)) {
 			throw new IllegalArgumentException("Cannot set the previousVertex value because it cannot be null and cannot be outside the grid.");
@@ -233,10 +353,19 @@ public class Stitcher
 		previousVertex[y][x] = previousPosition;
 	}
 		
+	/**
+	 * Returns the targetPosition. The targetPosition is the final position of the Dijkstra algorithm.
+	 * @return The targetPosition (used for Dijkstra's algorithm).
+	 */
 	private Position getTargetPosition() {
 		return new Position(this.getHeight()-1, this.getWidth()-1);
 	}
 	
+	/**
+	 * returns whether or not there exists a path to the vertex on the given position. 
+	 * @param p The position the vertex is located.
+	 * @return True when there exists a path to the vertex; otherwise false.
+	 */
 	private boolean hasPathTo(Position p) {
 		if(p == null) {
 			throw new IllegalArgumentException("Path cannot be null to determine if a path exists.");
@@ -244,6 +373,11 @@ public class Stitcher
 		return this.getDistTo()[p.getY()][p.getX()] < Double.POSITIVE_INFINITY;
 	}
 	
+	/**
+	 * Returns all the possible neighbors of a vertex. (Used in Dijkstra's algorithm).
+	 * @param p The position of which the neighbors should be calculated.
+	 * @return a List of neighbors of the given position. A neighbor itself is also a position.
+	 */
 	public List<Position> getPossibleNeighbors(Position p){
 		List<Position> neighbors = new ArrayList<>();
 		neighbors.addAll(this.getBasicNeighbors(p,this.getWidth(),this.getHeight()));
@@ -267,6 +401,14 @@ public class Stitcher
 		return neighbors;
 	}
 	
+	/**
+	 * Returns the basic neighbors of a position in a field with given width and height.
+	 * A basic neighbor is left, right, top, bottom
+	 * @param p The position of which the neighbors need to be calculated.
+	 * @param width The width of the field.
+	 * @param height The height of the field.
+	 * @return The list of neighbors of the given position.
+	 */
 	private List<Position> getBasicNeighbors(Position p, int width, int height) {
 		List<Position> neighbors = new ArrayList<>();
 		// left
@@ -288,6 +430,10 @@ public class Stitcher
 		return neighbors;
 	}
 	
+	/**
+	 * Returns the comparator used to compare Position objects.
+	 * @return The comparator used to compare Position objects.
+	 */
 	private Comparator<Position> getPositionComparator() {
 		return new Comparator<Position>() {
 			@Override
