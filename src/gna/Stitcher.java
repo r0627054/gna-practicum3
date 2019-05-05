@@ -3,6 +3,7 @@ package gna;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.PriorityQueue;
+import java.util.Stack;
 
 import libpract.*;
 
@@ -60,12 +61,10 @@ public class Stitcher
 		
 		this.performDijkstra(image1, image2);
 		
-		
-		
-		return null;
+		return this.getShortestPathSolution();
 	}
 	
-	public void performDijkstra(int[][] image1, int[][] image2) {
+	private void performDijkstra(int[][] image1, int[][] image2) {
 		// all nodes except the start node are initialised to zero.
 		for (int w = 0; w < this.getWidth(); w++) {
 			for (int h = 0; h < this.getHeight(); h++) {
@@ -74,6 +73,7 @@ public class Stitcher
 		}
 		this.setDistoValue(0, 0, 0);
 
+		//Dijkstra calculation and stops when the shortest path to the destination is reached
 		Position currentPosition = new Position(0, 0);
 		this.getPositionPQ().add(currentPosition);
 		while (!currentPosition.equals(this.getTargetPosition())) {
@@ -92,6 +92,24 @@ public class Stitcher
 			}
 			currentPosition = this.getPositionPQ().poll();
 		}
+	}
+	
+	private List<Position> getShortestPathSolution(){
+		if(!hasPathTo(this.getTargetPosition())) return null;
+		//calculate shortest path starting from the target
+		Stack<Position> reversePath = new Stack<Position>();
+		Position current = this.getTargetPosition();
+		reversePath.add(current);
+		while(this.getPreviousVertex()[current.getX()][current.getY()] != null) {
+			current = this.getPreviousVertex()[current.getX()][current.getY()];
+			reversePath.add(current);
+		}
+		//reverse the list again
+		List<Position> shortestPath = new ArrayList<>();
+		while(!reversePath.isEmpty()) {
+			shortestPath.add(reversePath.pop());
+		}
+		return shortestPath;	
 	}
 
 	/**
@@ -195,10 +213,16 @@ public class Stitcher
 		}
 		previousVertex[x][y] = previousPosition;
 	}
-	
-	
+		
 	private Position getTargetPosition() {
 		return new Position(this.getWidth()-1, this.getHeight()-1);
+	}
+	
+	private boolean hasPathTo(Position p) {
+		if(p == null) {
+			throw new IllegalArgumentException("Path cannot be null to determine if a path exists.");
+		}
+		return this.getDistTo()[p.getX()][p.getY()] < Double.POSITIVE_INFINITY;
 	}
 	
 	private List<Position> getPossibleNeighbors(Position p){
