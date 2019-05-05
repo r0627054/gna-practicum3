@@ -1,6 +1,7 @@
 package gna;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Stack;
@@ -45,17 +46,13 @@ public class Stitcher
 	 *   convention also means that, when an automated test mentioned that it used the array
 	 *   {{A,B},{C,D}} as a test image, this corresponds to the image layout as shown in
 	 *   the illustration above.
-	 *   
-	 *   //we krijgen al het overlappende gedeelte. Deze grens is altijd van de linker bovenhoek naar de rechter onderhoek.
-	 *   //Dijkstra
-	 *   //diagonaal
-	 *   
+	 *      
 	 */
 	public List<Position> seam(int[][] image1, int[][] image2) {
 		this.setWidth(image1.length);
 		this.setHeight(image1[0].length);
 		
-		this.setPositionPQ(new PriorityQueue<Position>());
+		this.setPositionPQ(new PriorityQueue<Position>(this.getPositionComparator()));
 		this.setDistTo(new double[this.getWidth()][this.getHeight()]);
 		this.setPreviousVertex(new Position[this.getWidth()][this.getHeight()]);
 		
@@ -261,6 +258,24 @@ public class Stitcher
 			neighbors.add(new Position(p.getX()+1, p.getY()+1));
 		}
 		return neighbors;
+	}
+	
+	private Comparator<Position> getPositionComparator() {
+		return new Comparator<Position>() {
+			@Override
+			public int compare(Position position1, Position position2) {
+				if(position1 == null || position2 == null) {
+					return 0;
+				}
+				if(getDistTo()[position1.getX()][position1.getY()] < getDistTo()[position2.getX()][position2.getY()]) {
+					return -1;
+				} else if(getDistTo()[position1.getX()][position1.getY()] > getDistTo()[position2.getX()][position2.getY()]) {
+					return 1;
+				}else {
+					return 0;
+				}
+			}
+		};
 	}
 		
 }
