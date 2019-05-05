@@ -7,24 +7,21 @@ import java.util.List;
 import org.junit.Test;
 
 import libpract.Position;
+import libpract.Stitch;
 
 public class StitcherTest {
 
 	@Test
-	public void driesTest() {
-		Stitcher s = new Stitcher();
-		s.setWidth(50);
-		s.setHeight(80);
-		Position start = new Position(0, 49);
-		System.out.print("Staaaart ");
-		sysoutPosition(start);
-		for(Position p: s.getPossibleNeighbors(start)) {
-			sysoutPosition(p);
+	public void floodFillTest() {
+		Stitch[][] input = {{Stitch.SEAM,Stitch.EMPTY}, {Stitch.EMPTY, Stitch.SEAM}};
+		Stitch[][] expectedOutput = {{Stitch.SEAM,Stitch.IMAGE2}, {Stitch.IMAGE1, Stitch.SEAM}};
+		new Stitcher().floodfill(input);
+		
+		for (int i = 0; i < expectedOutput.length; i++) {
+			for (int j = 0; j < expectedOutput[0].length; j++) {
+				assertEquals(expectedOutput[i][j], input[i][j]);
+			}
 		}
-	}
-	
-	public void sysoutPosition(Position p) {
-		System.out.println("Position: X="+p.getX()+"    Y="+p.getY());
 	}
 	
 	

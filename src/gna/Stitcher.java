@@ -122,9 +122,29 @@ public class Stitcher
 	 * to check whether your implementation does this properly.
 	 */
 	public void floodfill(Stitch[][] mask) {
-		throw new RuntimeException("not implemented yet");
+		//start by filling Image1, the bottom left corner is the starting position.
+		//if this one is not colored, the others aren't either.
+		this.floodFill(mask, mask.length-1, 0, Stitch.IMAGE1);
+		//start by filling Image2, the top right corner is the starting position.
+		//if this one is not colored, the others aren't either.
+		this.floodFill(mask, 0, mask[0].length-1, Stitch.IMAGE2);
 	}
 
+	public void floodFill(Stitch[][] mask, int y, int x, Stitch type) {
+		//use of stack because we need to go depth first
+		Stack<Position> nextColoring = new Stack<>();
+		nextColoring.add(new Position(y, x));
+		while(!nextColoring.isEmpty()) {
+			Position currentPosition = nextColoring.pop();
+			Stitch currentStitch = mask[currentPosition.getY()][currentPosition.getX()];
+			if(currentStitch == Stitch.EMPTY) {
+				mask[currentPosition.getY()][currentPosition.getX()] = type;
+				nextColoring.addAll(this.getBasicNeighbors(currentPosition,mask[0].length,mask.length));
+			}
+		}
+	}
+	
+	
 	/**
 	 * Return the mask to stitch two images together. The seam runs from the upper
 	 * left to the lower right corner, where in general the rightmost part comes from
@@ -226,22 +246,7 @@ public class Stitcher
 	
 	public List<Position> getPossibleNeighbors(Position p){
 		List<Position> neighbors = new ArrayList<>();
-		//left
-		if(  (p.getX()-1) >= 0 ) {
-			neighbors.add(new Position(p.getY(), p.getX()-1));
-		}
-		//right
-		if( (p.getX()+1) < this.getWidth()  ) {
-			neighbors.add(new Position(p.getY(), p.getX()+1));
-		}
-		//top
-		if(  (p.getY()-1) >= 0 ) {
-			neighbors.add(new Position(p.getY()-1, p.getX()));
-		}
-		//bottom
-		if( (p.getY()+1) < this.getHeight()  ) {
-			neighbors.add(new Position(p.getY()+1, p.getX()));
-		}
+		neighbors.addAll(this.getBasicNeighbors(p,this.getWidth(),this.getHeight()));
 		
 		//left + top
 		if( ( (p.getX()-1) >= 0 ) &&  ((p.getY()-1) >= 0 ) ) {
@@ -258,6 +263,27 @@ public class Stitcher
 		//right + bottom
 		if( ((p.getX()+1) < this.getWidth())  && ((p.getY()+1) < this.getHeight())) {
 			neighbors.add(new Position(p.getY()+1, p.getX()+1));
+		}
+		return neighbors;
+	}
+	
+	private List<Position> getBasicNeighbors(Position p, int width, int height) {
+		List<Position> neighbors = new ArrayList<>();
+		// left
+		if ((p.getX() - 1) >= 0) {
+			neighbors.add(new Position(p.getY(), p.getX() - 1));
+		}
+		// right
+		if ((p.getX() + 1) < width) {
+			neighbors.add(new Position(p.getY(), p.getX() + 1));
+		}
+		// top
+		if ((p.getY() - 1) >= 0) {
+			neighbors.add(new Position(p.getY() - 1, p.getX()));
+		}
+		// bottom
+		if ((p.getY() + 1) < height) {
+			neighbors.add(new Position(p.getY() + 1, p.getX()));
 		}
 		return neighbors;
 	}
