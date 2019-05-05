@@ -49,12 +49,14 @@ public class Stitcher
 	 *      
 	 */
 	public List<Position> seam(int[][] image1, int[][] image2) {
-		this.setWidth(image1.length);
-		this.setHeight(image1[0].length);
+		//this.setWidth(image1.length);
+		//this.setHeight(image1[0].length);
+		this.setHeight(image1.length);
+		this.setWidth(image1[0].length);
 		
 		this.setPositionPQ(new PriorityQueue<Position>(this.getPositionComparator()));
-		this.setDistTo(new double[this.getWidth()][this.getHeight()]);
-		this.setPreviousVertex(new Position[this.getWidth()][this.getHeight()]);
+		this.setDistTo(new double[this.getHeight()][this.getWidth()]);
+		this.setPreviousVertex(new Position[this.getHeight()][this.getWidth()]);
 		
 		this.performDijkstra(image1, image2);
 		
@@ -63,9 +65,9 @@ public class Stitcher
 	
 	private void performDijkstra(int[][] image1, int[][] image2) {
 		// all nodes except the start node are initialised to zero.
-		for (int w = 0; w < this.getWidth(); w++) {
-			for (int h = 0; h < this.getHeight(); h++) {
-				this.setDistoValue(w, h, Double.POSITIVE_INFINITY);
+		for (int h = 0; h < this.getHeight(); h++) {
+			for (int w = 0; w < this.getWidth(); w++) {
+				this.setDistoValue(h, w, Double.POSITIVE_INFINITY);
 			}
 		}
 		this.setDistoValue(0, 0, 0);
@@ -75,12 +77,12 @@ public class Stitcher
 		this.getPositionPQ().add(currentPosition);
 		while (!currentPosition.equals(this.getTargetPosition())) {
 			for (Position neighbor : this.getPossibleNeighbors(currentPosition)) {
-				double calcDistance = this.getDistTo()[currentPosition.getX()][currentPosition.getY()]
-						+ ImageCompositor.pixelSqDistance(image1[neighbor.getX()][neighbor.getY()],
-								image2[neighbor.getX()][neighbor.getY()]);
-				if (calcDistance < this.getDistTo()[neighbor.getX()][neighbor.getY()]) {
-					this.setDistoValue(neighbor.getX(), neighbor.getY(), calcDistance);
-					this.setPreviousVertexValue(neighbor.getX(), neighbor.getY(), currentPosition);
+				double calcDistance = this.getDistTo()[currentPosition.getY()][currentPosition.getX()]
+						+ ImageCompositor.pixelSqDistance(image1[neighbor.getY()][neighbor.getX()],
+								image2[neighbor.getY()][neighbor.getX()]);
+				if (calcDistance < this.getDistTo()[neighbor.getY()][neighbor.getX()]) {
+					this.setDistoValue(neighbor.getY(), neighbor.getX(), calcDistance);
+					this.setPreviousVertexValue(neighbor.getY(), neighbor.getX(), currentPosition);
 					if (this.getPositionPQ().contains(neighbor)) {
 						this.getPositionPQ().remove(neighbor);
 					}
@@ -97,8 +99,8 @@ public class Stitcher
 		Stack<Position> reversePath = new Stack<Position>();
 		Position current = this.getTargetPosition();
 		reversePath.add(current);
-		while(this.getPreviousVertex()[current.getX()][current.getY()] != null) {
-			current = this.getPreviousVertex()[current.getX()][current.getY()];
+		while(this.getPreviousVertex()[current.getY()][current.getX()] != null) {
+			current = this.getPreviousVertex()[current.getY()][current.getX()];
 			reversePath.add(current);
 		}
 		//reverse the list again
@@ -157,7 +159,7 @@ public class Stitcher
 		return width;
 	}
 
-	private void setWidth(int width) {
+	public void setWidth(int width) {
 		if(width < 0) {
 			throw new IllegalArgumentException("Width of an image cannot be negative.");
 		}
@@ -168,7 +170,7 @@ public class Stitcher
 		return height;
 	}
 
-	private void setHeight(int height) {
+	public void setHeight(int height) {
 		if(height < 0) {
 			throw new IllegalArgumentException("The height of an image cannot be negative.");
 		}
@@ -197,65 +199,65 @@ public class Stitcher
 		this.previousVertex = previousVertex;
 	}
 	
-	private void setDistoValue(int x, int y, double value) {
+	private void setDistoValue(int y, int x, double value) {
 		if(x <0 || y <0) {
 			throw new IllegalArgumentException("The positions of disto array cannot be null.");
 		}
-		distTo[x][y] = value;
+		distTo[y][x] = value;
 	}
 	
-	private void setPreviousVertexValue(int x, int y, Position previousPosition) {
+	private void setPreviousVertexValue(int y, int x, Position previousPosition) {
 		if((x <0) || (y<0) || (previousPosition== null)) {
 			throw new IllegalArgumentException("Cannot set the previousVertex value because it cannot be null and cannot be outside the grid.");
 		}
-		previousVertex[x][y] = previousPosition;
+		previousVertex[y][x] = previousPosition;
 	}
 		
 	private Position getTargetPosition() {
-		return new Position(this.getWidth()-1, this.getHeight()-1);
+		return new Position(this.getHeight()-1, this.getWidth()-1);
 	}
 	
 	private boolean hasPathTo(Position p) {
 		if(p == null) {
 			throw new IllegalArgumentException("Path cannot be null to determine if a path exists.");
 		}
-		return this.getDistTo()[p.getX()][p.getY()] < Double.POSITIVE_INFINITY;
+		return this.getDistTo()[p.getY()][p.getX()] < Double.POSITIVE_INFINITY;
 	}
 	
-	private List<Position> getPossibleNeighbors(Position p){
+	public List<Position> getPossibleNeighbors(Position p){
 		List<Position> neighbors = new ArrayList<>();
 		//left
 		if(  (p.getX()-1) >= 0 ) {
-			neighbors.add(new Position(p.getX() -1, p.getY()));
+			neighbors.add(new Position(p.getY(), p.getX()-1));
 		}
 		//right
 		if( (p.getX()+1) < this.getWidth()  ) {
-			neighbors.add(new Position(p.getX() +1, p.getY()));
+			neighbors.add(new Position(p.getY(), p.getX()+1));
 		}
 		//top
 		if(  (p.getY()-1) >= 0 ) {
-			neighbors.add(new Position(p.getX(), p.getY()-1));
+			neighbors.add(new Position(p.getY()-1, p.getX()));
 		}
 		//bottom
 		if( (p.getY()+1) < this.getHeight()  ) {
-			neighbors.add(new Position(p.getX(), p.getY()+1));
+			neighbors.add(new Position(p.getY()+1, p.getX()));
 		}
 		
 		//left + top
 		if( ( (p.getX()-1) >= 0 ) &&  ((p.getY()-1) >= 0 ) ) {
-			neighbors.add(new Position(p.getX()-1, p.getY()-1));
+			neighbors.add(new Position(p.getY()-1, p.getX()-1));
 		}
 		//left + bottom
 		if( ( (p.getX()-1) >= 0 ) && ((p.getY()+1) < this.getHeight()) ) {
-			neighbors.add(new Position(p.getX()-1, p.getY()+1));
+			neighbors.add(new Position(p.getY()+1, p.getX()-1));
 		}
 		//right + top
 		if( ((p.getX()+1) < this.getWidth()) && ((p.getY()-1) >= 0 )  ) {
-			neighbors.add(new Position(p.getX()+1, p.getY()-1));
+			neighbors.add(new Position(p.getY()-1, p.getX()+1));
 		}
 		//right + bottom
 		if( ((p.getX()+1) < this.getWidth())  && ((p.getY()+1) < this.getHeight())) {
-			neighbors.add(new Position(p.getX()+1, p.getY()+1));
+			neighbors.add(new Position(p.getY()+1, p.getX()+1));
 		}
 		return neighbors;
 	}
@@ -267,9 +269,9 @@ public class Stitcher
 				if(position1 == null || position2 == null) {
 					return 0;
 				}
-				if(getDistTo()[position1.getX()][position1.getY()] < getDistTo()[position2.getX()][position2.getY()]) {
+				if(getDistTo()[position1.getY()][position1.getX()] < getDistTo()[position2.getY()][position2.getX()]) {
 					return -1;
-				} else if(getDistTo()[position1.getX()][position1.getY()] > getDistTo()[position2.getX()][position2.getY()]) {
+				} else if(getDistTo()[position1.getY()][position1.getX()] > getDistTo()[position2.getY()][position2.getX()]) {
 					return 1;
 				}else {
 					return 0;
